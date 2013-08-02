@@ -27,8 +27,8 @@ class PivotalTrackerPlugin extends MantisPlugin {
     function config() {
         return array(
         	'pt_token' => '0',
-		'pt_user_id' => '0',
-		'pt_projects_and_integration_ids' => '0',
+		'userid' => 'enter id',
+		'projects_and_integration_ids' => '0',
         );
     }
 
@@ -40,8 +40,8 @@ class PivotalTrackerPlugin extends MantisPlugin {
 	$ch = curl_init("http://www.pivotaltracker.com/services/v3/projects/881952/stories");
 
 	curl_setopt($ch, CURLOPT_POST, 1);
-	curl_setopt($ch, CURLOPT_POSTFIELDS, "<story><story_type>bug</story_type><name>[bug #$p_bug_id] {$p_bug_data->summary}</name><description>{$p_bug_data->description}</description><external_id>$p_bug_id</external_id><integration_id>22638</integration_id></story>");
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: ".plugin_config_get( 'pt_token' ))); 
+	curl_setopt($ch, CURLOPT_POSTFIELDS, "<story><story_type>bug</story_type><name>[bug #$p_bug_id] {$p_bug_data->summary}</name><description>{$p_bug_data->description}</description><requested_by>" . plugin_config_get('userid') . "</requested_by><external_id>$p_bug_id</external_id><integration_id>22638</integration_id></story>");
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: " . plugin_config_get('pt_token'))); 
 	curl_setopt($ch, CURLOPT_HEADER, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
