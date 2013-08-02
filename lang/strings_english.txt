@@ -1,0 +1,4 @@
+<?php
+
+$s_plugin_PivotalTracker_config = "Configuration";
+$s_plugin_PivotalTracker_pt_token = "API Token";
