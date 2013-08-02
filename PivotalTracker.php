@@ -49,14 +49,16 @@ class PivotalTrackerPlugin extends MantisPlugin {
 		$config_proj_id_pt = $config_proj_integration_data[$i*3+1];
 		$config_proj_integration_id_pt = $config_proj_integration_data[$i*3+2];
 		if ($config_proj_id_mantis == $p_bug_data->project_id){
+			$p_userid = plugin_config_get('userid');
+			$p_pt_token = plugin_config_get('pt_token');
 			$ch = curl_init("http://www.pivotaltracker.com/services/v3/projects/$config_proj_id_pt/stories");
 
 			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, "<story><story_type>bug</story_type><name>[bug #$p_bug_id] " .
-				"{$p_bug_data->summary}</name><description>{$p_bug_data->description}</description><requested_by>" . 
-				plugin_config_get('userid') . 
-				"</requested_by><external_id>$p_bug_id</external_id><integration_id>$config_proj_integration_id_pt</integration_id></story>");
-			curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: " . plugin_config_get('pt_token'))); 
+				"{$p_bug_data->summary}</name><description>{$p_bug_data->description}</description>" . 
+				(strlen ($p_userid) == 0 ? "" : "<requested_by>$p_userid</requested_by>") . 
+				"<external_id>$p_bug_id</external_id><integration_id>$config_proj_integration_id_pt</integration_id></story>");
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: " . $p_pt_token)); 
 			curl_setopt($ch, CURLOPT_HEADER, 1);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
