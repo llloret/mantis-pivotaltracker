@@ -3,3 +3,5 @@
 $s_plugin_PivotalTracker_config = "Configuration";
 $s_plugin_PivotalTracker_pt_token = "API Token";
 $s_plugin_PivotalTracker_userid = "Pivotal Tracker User id";
+$s_plugin_PivotalTracker_projects_and_integration = "Projects to connect";
+

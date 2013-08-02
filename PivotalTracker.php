@@ -27,27 +27,45 @@ class PivotalTrackerPlugin extends MantisPlugin {
     function config() {
         return array(
         	'pt_token' => '0',
-		'userid' => 'enter id',
-		'projects_and_integration_ids' => '0',
+		'userid' => '',
+		'projects_and_integration' => '',
         );
     }
 
     function new_bug( $pEvent, $p_bug_data, $p_bug_id ) {
         echo "In method new_bug(). {$p_bug_data->summary} ({$p_bug_data->id})";
-# curl -H "X-TrackerToken: 9474655f2f75d39f689d875a12a11b44" -X POST -H "Content-type: application/xml" \
-#    -d "<story><story_type>feature</story_type><name>Fire torpedoes</name><requested_by>James Kirk</requested_by></story>" \
-#    http://www.pivotaltracker.com/services/v3/projects/881952/stories
-	$ch = curl_init("http://www.pivotaltracker.com/services/v3/projects/881952/stories");
+	
+	# Check if the bug is in one of the projects we are integrating with PT. If it is get the data to interact with PT
+	# And send to PT
+	$config_proj_integration_data = explode (",", plugin_config_get('projects_and_integration'));
+	$n_exploded = count ($config_proj_integration_data);
+	if ($n_exploded % 3 != 0){
+		echo "Error, the configuration string for PT integration should have a length multiple of 3";
+		return;
+	}	
+	
+	for ($i = 0; $i < $n_exploded / 3; $i++){
+		$config_proj_id_mantis = project_get_id_by_name($config_proj_integration_data[$i*3+0]);
+		$config_proj_id_pt = $config_proj_integration_data[$i*3+1];
+		$config_proj_integration_id_pt = $config_proj_integration_data[$i*3+2];
+		if ($config_proj_id_mantis == $p_bug_data->project_id){
+			$ch = curl_init("http://www.pivotaltracker.com/services/v3/projects/$config_proj_id_pt/stories");
 
-	curl_setopt($ch, CURLOPT_POST, 1);
-	curl_setopt($ch, CURLOPT_POSTFIELDS, "<story><story_type>bug</story_type><name>[bug #$p_bug_id] {$p_bug_data->summary}</name><description>{$p_bug_data->description}</description><requested_by>" . plugin_config_get('userid') . "</requested_by><external_id>$p_bug_id</external_id><integration_id>22638</integration_id></story>");
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: " . plugin_config_get('pt_token'))); 
-	curl_setopt($ch, CURLOPT_HEADER, 1);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, "<story><story_type>bug</story_type><name>[bug #$p_bug_id] " .
+				"{$p_bug_data->summary}</name><description>{$p_bug_data->description}</description><requested_by>" . 
+				plugin_config_get('userid') . 
+				"</requested_by><external_id>$p_bug_id</external_id><integration_id>$config_proj_integration_id_pt</integration_id></story>");
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: " . plugin_config_get('pt_token'))); 
+			curl_setopt($ch, CURLOPT_HEADER, 1);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-	$res = curl_exec($ch);
-#	echo "RES: $res";
-	curl_close($ch);
+			$res = curl_exec($ch);
+			#	echo "RES: $res";
+			curl_close($ch);
+		}	
+	}
+
+	#if it was not found then, we just ignored it, which is what we should do
     }
-
 }
