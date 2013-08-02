@@ -41,7 +41,7 @@ class PivotalTrackerPlugin extends MantisPlugin {
 
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, "<story><story_type>bug</story_type><name>[bug #$p_bug_id] {$p_bug_data->summary}</name><description>{$p_bug_data->description}</description><external_id>$p_bug_id</external_id><integration_id>22638</integration_id></story>");
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: 9474655f2f75d39f689d875a12a11b44")); 
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/xml", "X-TrackerToken: ".plugin_config_get( 'pt_token' ))); 
 	curl_setopt($ch, CURLOPT_HEADER, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
