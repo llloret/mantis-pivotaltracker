@@ -107,7 +107,8 @@ class PivotalTrackerPlugin extends MantisPlugin {
 
 				$res = curl_exec($ch);
 				curl_close($ch);
-				
+
+				# Parse the XML output from PT				
 				$p = xml_parser_create();
 				$rc = xml_parse_into_struct ($p, $res, $vals, $index);
 				if ($rc == 0){
@@ -123,6 +124,11 @@ class PivotalTrackerPlugin extends MantisPlugin {
 						$PT_story_id = $elem["value"];
 						error_log ("Story id found: " . $PT_story_id);
 					}
+					else if ("CURRENT_STATEcomplete3" == $elem["tag"] . $elem["type"] . $elem["level"]){ 
+						$PT_current_state = $elem["value"];
+						error_log ("Story status: " . $PT_current_state);
+					}
+
 				}
 
 
@@ -136,6 +142,13 @@ class PivotalTrackerPlugin extends MantisPlugin {
 				# define( 'ASSIGNED', 50 );
 				# define( 'RESOLVED', 80 );
 				# define( 'CLOSED', 90 );
+				#
+				# The logic for the change of state is as follows:
+				# - if the buf is marked as fixed, set to delivered on PT
+				# - if the bug is marked as closed, set to accepted on PT
+				# - if the bug is marked as new, set to unstarted on PT
+				# - if the story is either accepted or delivered in PT, and the bug is marked different from any of the above, mark as rejected on PT
+				# - Otherwise, do not update the status on PT
 
 				if ($PT_story_id != 0){
 					# decide the new status
@@ -144,7 +157,11 @@ class PivotalTrackerPlugin extends MantisPlugin {
 						case 90: $PT_new_status = "accepted"; break;
 						case 80: $PT_new_status = "delivered"; break;
 						case 10: $PT_new_status = "unstarted"; break;
-						default: $PT_new_status = ""; break;
+						default: 
+							if ($PT_current_state == 'accepted' or $PT_current_state == 'delivered'){
+								$PT_new_status = "rejected"; 
+							}
+						break;
 					}
 					$ch = curl_init("https://www.pivotaltracker.com/services/v3/projects/$config_proj_id_pt/stories/$PT_story_id");
 					curl_setopt($ch, CURLOPT_POST, 0);
